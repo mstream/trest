@@ -1,0 +1,36 @@
+{
+  "extends": [
+    "auto"
+  ],
+  "rules": {
+    "import/extensions": "off",
+    "import/no-extraneous-dependencies": [
+      "error", 
+      { "devDependencies": [
+        "spec/**/*.mjs",
+        "**/*.spec.mjs"
+        ]
+      }
+    ],
+    "import/prefer-default-export": "off",
+    "no-secrets/no-secrets": [
+      "error",
+      {"tolerance": 4.1}
+    ],
+    "quote-props": [
+      "error",
+      "consistent-as-needed"
+    ],
+    "quotes": [
+      "error",
+      "single"
+    ],
+    "sort-keys": [
+      "error", 
+      "asc", 
+      {"natural": false}
+    ],
+    "unicorn/no-array-reduce": "off",
+    "unicorn/prefer-node-protocol": "off"
+  }
+}

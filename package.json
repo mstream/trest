@@ -1,0 +1,54 @@
+{
+  "name": "trest",
+  "version": "1.0.0",
+  "scripts": {
+    "commit": "cz",
+    "lint": "eslint --ext .mjs --fix src spec",
+    "exec": "npm run test && node src/index.mjs",
+    "test": "npm run lint && uvu src && uvu spec"
+  },
+  "dependencies": {
+    "@apidevtools/swagger-parser": "^10",
+    "cassandra-driver": "^4",
+    "crypto-js": "^4",
+    "json-schema-faker": "0.5.0-rcv.34",
+    "ramda": "~0.27"
+  },
+  "devDependencies": {
+    "@ipld/is-circular": "^2.0.0",
+    "cz-conventional-changelog": "^3",
+    "docker-compose": "~0.23",
+    "eslint": "^7",
+    "eslint-config-adjunct": "^4",
+    "eslint-config-auto": "~0.7",
+    "eslint-config-prettier": "^8",
+    "eslint-plugin-array-func": "^3",
+    "eslint-plugin-eslint-comments": "^3",
+    "eslint-plugin-html": "^6",
+    "eslint-plugin-jasmine": "^4",
+    "eslint-plugin-json": "^3",
+    "eslint-plugin-markdown": "^2",
+    "eslint-plugin-no-constructor-bind": "^2",
+    "eslint-plugin-no-secrets": "~0.8",
+    "eslint-plugin-no-unsanitized": "^3",
+    "eslint-plugin-no-use-extend-native": "~0.5",
+    "eslint-plugin-node": "^11",
+    "eslint-plugin-optimize-regex": "^1",
+    "eslint-plugin-promise": "^5",
+    "eslint-plugin-ramda": "^2",
+    "eslint-plugin-scanjs-rules": "~0.2",
+    "eslint-plugin-security": "^1",
+    "eslint-plugin-simple-import-sort": "^7",
+    "eslint-plugin-sonarjs": "0.8.0-125",
+    "eslint-plugin-switch-case": "^1",
+    "eslint-plugin-unicorn": "^34",
+    "npm": "^7",
+    "prettier": "^2",
+    "uvu": "~0.5"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  }
+}

@@ -1,0 +1,479 @@
+---
+components:
+  examples:
+    InputValidationErrorResponseBody:
+      summary: 'Input validation error'
+      value:
+        - description: >
+            Invalid <name of the value> supplied
+
+          errorCode: 'OVP_00027'
+    SecurityFailureResponseBody:
+      summary: 'Generic security failure'
+      value:
+        - description: > 
+            Security failure
+
+          errorCode: 'OVP_00306'
+    UserTokenMissingResponseBody: 
+      summary: 'User token not provided'
+      value:
+        - description: >
+            Missing mandatory data: X-SkyOTT-UserToken
+
+          errorCode: 'OVP_00001'
+  parameters:
+    CountryCodePathParameter:
+      description: > 
+        CountryCode
+
+      in: 'path'
+      name: 'countryCode'
+      required: true
+      schema:
+        $ref: '#/components/schemas/CountryCode'
+    RequestIdHeader:
+      description: >
+        Request tracking identifier which is used to correlate
+        subsequent downstream requests with each other.
+     
+      example: 'cfcb46e7-cc41-4610-9824-7c532a9a6557'
+      in: 'header'
+      name: 'X-SkyOTT-RequestId'
+      required: false 
+      schema: 
+        type: 'string'
+  responses: 
+    ForbiddenError: 
+      content:
+        'application/json':
+          examples:
+            SecurityFailureResponseBody:
+              $ref: '#/components/examples/SecurityFailureResponseBody'
+          schema:
+            $ref: '#/components/schemas/ValidationErrors'
+      description: >
+        Insufficient privileges for the action
+
+    InvalidInputError: 
+      content:
+        'application/json':
+          examples:
+            InputValidationErrorResponseBody:
+              $ref: '#/components/examples/InputValidationErrorResponseBody'
+          schema:
+            $ref: '#/components/schemas/ValidationErrors'
+      description: >
+        Invalid input
+
+    NotFoundError: 
+      description: >
+        Not found
+
+    UnauthorizedError:
+      content:
+        
+        'application/json':
+          examples:
+            UserTokenMissingResponseBody:
+              $ref: '#/components/examples/UserTokenMissingResponseBody'
+          schema:
+            $ref: '#/components/schemas/ValidationErrors'
+         
+      description: > 
+        Authentication information is missing or invalid
+
+    UnexpectedError:
+      description: > 
+        Unexpected error
+ 
+  schemas:
+    CheckResult:
+      additionalProperties: true
+      properties: 
+        isHealthy:
+          type: 'boolean'
+      required: 
+        - 'isHealthy'
+      type: 'object'
+    CheckResults:
+      additionalProperties:
+        $ref: '#/components/schemas/CheckResult'  
+      type: 'object'
+    CountryCode:
+      example: 'GB'
+      minLength: 2
+      type: 'string'
+    CountryCodes:
+      example:
+        - 'DE'
+        - 'FR'
+        - 'GB'
+      type: 'string'
+    Rating:
+      description: >
+        Video content rating.
+     
+      example: 'PG'
+      title: 'Rating'
+      type: 'string'
+    Ratings:
+      description: >
+        Video content ratings ordered from the least restrictive to the
+        most restrictive.
+      
+      example: 
+        - 'U'
+        - 'PG'
+        - '12'
+        - '15'
+        - '18'
+      items: 
+        $ref: '#/components/schemas/Rating'   
+      minItems: 1
+      title: 'Ratings'
+      type: 'array'
+    ServiceInfo:
+      properties: 
+        application: 
+          type: 'string'
+        environment: 
+          type: 'string'
+        version:
+          type: 'string'
+        checkResults:
+          $ref: '#/components/schemas/CheckResults'  
+      required:
+        - 'application'
+        - 'checkResults'
+        - 'environment'
+        - 'version'
+      type: 'object'
+    ValidationError:
+      example: 
+        errorCode: 'OVP_00001'
+        description: >
+          Missing mandatory data: X-SkyOTT-UserToken
+     
+      properties:
+        description: 
+          type: 'string'
+        errorCode: 
+          type: 'string'
+      required:
+        - 'description'
+        - 'errorCode'
+      type: 'object'
+    ValidationErrors:
+      description: >
+        A list of validation errors.
+     
+      example: 
+        - description: > 
+            Missing mandatory data: X-SkyOTT-UserToken
+        
+          errorCode: 'OVP_00001'
+        - description: > 
+            Security failure
+         
+          errorCode: 'OVP_00306'
+      items: 
+        $ref: '#/components/schemas/ValidationError'   
+      minItems: 1
+      title: 'Validation Error'
+      type: 'array'
+  securitySchemes:
+    BasicAuth:     
+      type: 'http'
+      scheme: 'basic'
+info:
+  description: >
+    A web service to allow customers to self-manage the access to their
+    video content. Its main focus is to protect the minors from an
+    exposure to movies not suitable for their age. The goal is achieved
+    by challenging the viewer with a personal identification number
+    before a playout if the content is rated above the desired level.
+    The ratings for films/shows reflect the standards of a country that
+    a customers have their contracts signed in.
+
+  title: 'Parental Control'
+  version: '1.0.0'
+openapi: '3.0.3'
+paths:
+  '/private/admin/parentalControl':
+    parameters:
+      - $ref: '#/components/parameters/RequestIdHeader'
+    get:
+      description: >
+        This operation returns a list of country codes assotiated with
+        territories the Parental Control service supports.
+        The minimum requirement for a territory to be supported is a
+        presence of a list of content ratings.
+      
+      operationId: 'adminRetrieveSupportedTerritories'
+      responses:
+        '200':
+          description: >
+            List of supported territories.
+         
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/CountryCodes'
+        '401': 
+          $ref: '#/components/responses/UnauthorizedError'
+        '403': 
+          $ref: '#/components/responses/ForbiddenError'
+        '5XX':
+          $ref: '#/components/responses/UnexpectedError'
+      security:
+        - basicAuth: []
+      summary: 'Retrieve supported territories'
+      tags: 
+        - 'admin'
+        - 'private'
+  '/private/admin/parentalControl/{countryCode}':
+    parameters:
+      - $ref: '#/components/parameters/RequestIdHeader'
+      - $ref: '#/components/parameters/CountryCodePathParameter'
+    delete:
+      description: >
+        This operation deletes requested territory. After a successful
+        execution, clients from that countries will not be able to use
+        the Parental Control service.
+
+      operationId: 'adminRemoveSupportedTerritory'
+      responses:
+        '204':
+          description: >
+            Territory removed.
+
+          x-trest-scenarios:
+            - name: 'Removing a non-existent territory'
+            - name: 'Removing an existing territory'
+              given: 
+                cassandra:
+                  present: 
+                    - contactPoint: '{{ cassandraContactPoint | EXT }}' 
+                      localDataCenter: '{{ cassandraLocalDataCenter | EXT }}'
+                      keyspace: '{{ cassandraKeyspace | EXT }}'
+                      table: 'ratings'
+                      data: 
+                        countryCode: '{{ .path.countryCode | REQ }}' 
+                        values: '["A","B","C"]'
+              then:
+                cassandra:
+                  absent:
+                    - contactPoint: '{{ cassandraContactPoint | EXT }}' 
+                      localDataCenter: '{{ cassandraLocalDataCenter | EXT }}'
+                      keyspace: '{{ cassandraKeyspace | EXT }}'
+                      data: 
+                        - 'countryCode'
+                        - 'values'
+                      table: 'ratings'
+        '400': 
+          $ref: '#/components/responses/InvalidInputError'
+        '401': 
+          $ref: '#/components/responses/UnauthorizedError'
+        '403': 
+          $ref: '#/components/responses/ForbiddenError'
+        '5XX':
+          $ref: '#/components/responses/UnexpectedError'
+      security:
+        - basicAuth: []
+      summary: 'Remove supported territory'
+      tags: 
+        - 'admin'
+        - 'private'
+    get:
+      description: >
+        This operation returns a list of ratings for a requested
+        territory.
+      
+      operationId: 'adminRetrieveRatingsForSupportedTerritory'
+      responses:
+        '200':
+          description: >
+            Territory classifications
+
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Ratings'
+        '400': 
+          $ref: '#/components/responses/InvalidInputError'
+        '401': 
+          $ref: '#/components/responses/UnauthorizedError'
+        '403': 
+          $ref: '#/components/responses/ForbiddenError'
+        '404': 
+          $ref: '#/components/responses/NotFoundError'
+        '5XX':
+          $ref: '#/components/responses/UnexpectedError'
+      security:
+        - basicAuth: []
+      summary: 'Retrieve rating for supported territory'
+      tags: 
+        - 'admin'
+        - 'private'
+    put:
+      description: >
+        This operation sets up content ratings for a given territory.
+      
+      operationId: 'adminSetUpSupportedTerritory'
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Ratings'
+        description: > 
+          Supported content ratings
+
+        required: true
+      responses:
+        '204':
+          description: > 
+            Territory ratings set up
+          
+        '400': 
+          $ref: '#/components/responses/InvalidInputError'
+        '401': 
+          $ref: '#/components/responses/UnauthorizedError'
+        '403': 
+          $ref: '#/components/responses/ForbiddenError'
+        '5XX':
+          $ref: '#/components/responses/UnexpectedError'
+      security:
+        - basicAuth: []
+      summary: 'Set up supported territory'
+      tags: 
+        - 'admin'
+        - 'private'
+  '/private/metrics': 
+    get:
+      description: >
+        This operation provides various metrics which an instnance
+        of the Parental Control service has collected during its
+        lifetime.
+     
+      externalDocs:
+        description: >
+          Prometheus exposition formats documentation
+       
+        url: 'https://prometheus.io/docs/instrumenting/exposition_formats/'
+      operationId: 'retrieveMetrics'
+      responses: 
+        '200':
+          description: >
+            Metrics
+          
+          content:
+            'text/plain':
+              schema:
+                type: 'string'
+        '5XX':
+          $ref: '#/components/responses/UnexpectedError'
+      security: []
+      summary: 'Produces Prometheus metrics'
+      tags: 
+        - 'metrics'
+        - 'private'
+  '/private/ready': 
+    get:
+      description: >
+        This operation executes a serie of checks against subcomponents
+        vital to its ability to operate. If any of these checks fail
+        the servise should not be considered ready and therefore - no
+        client traffic should be directed to it.
+     
+      operationId: 'checkIfReady'
+      responses: 
+        '200':
+          description: >
+            The API is ready
+         
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ServiceInfo'
+        '503':
+          description: >
+            The API is not ready
+         
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ServiceInfo'
+        '5XX':
+          $ref: '#/components/responses/UnexpectedError'
+      security: []
+      summary: 'Shows if the API is ready to serve a HTTP traffic'
+      tags: 
+        - 'health'
+        - 'private'
+  '/private/status': 
+    get:
+      description: >
+        This operation does not do more than returning an empty
+        response. It is used by monitoring solution to detect a
+        situation where the service loses its responsiveness and
+        the OS process it operates within requires to be restarted.
+     
+      operationId: 'checkIfLive'
+      responses: 
+        '204':
+          description: > 
+            The API is responsive
+
+        '5XX':
+          $ref: '#/components/responses/UnexpectedError'
+      security: []
+      summary: 'Shows if the API is responsive'
+      tags: 
+        - 'health'
+        - 'private'
+  '/private/status/info': 
+    get:
+      description: >
+        This operation provides miscellaneous information regarding
+        settings and fitness of the service.
+      
+      operationId: 'showInfo'
+      responses:
+        '200':
+          description: >
+            Service information
+         
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ServiceInfo'
+        '5XX':
+          $ref: '#/components/responses/UnexpectedError'
+      summary: 'Show diagnostic information'
+      tags: 
+        - 'health'
+        - 'private'
+servers:
+  - url: 'http://localhost:8080'
+tags: 
+  - description: >
+      Group of administrative operation giving ability to review and
+      apply configuration of the service.
+
+    name: "admin"
+  - description: >
+      Group of operation providing an insights into the service fitness.
+
+    name: "health" 
+  - description: >
+      Group of operation providing time based values of various
+      data.
+ 
+    name: "metrics"
+  - description: >
+      Group of operation to which access should be restricted at
+      the network configuration level to only monitoring and
+      administrative tools.
+    
+    name: "private"
