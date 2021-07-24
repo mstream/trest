@@ -1,9 +1,10 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 
-import * as evaluating from '../src/evaluating.mjs';
+import * as evaluating from './index.mjs';
 
-const evaluateValue = suite('evaluateValue');
+const evaluateValue = suite('evaluateRequest');
+const evaluateRequest = suite('evaluateValue');
 
 function externalExpressions(names) {
   return names.reduce(
@@ -24,6 +25,28 @@ function externalExpressions(names) {
     },
   );
 }
+
+evaluateRequest('builds a request based on provided context', () => {
+  const pathTemplate = '/a/{pathParam1}/b/{pathParam2}/c';
+  const requestParameters = {
+    headers: {
+      headerParam1: 'headerParamValue1',
+      headerParam2: 'headerParamValue2',
+    },
+    path: {
+      pathParam1: 'pathParamValue1',
+      pathParam2: 'pathParamValue2',
+    },
+  };
+
+  assert.equal(
+    evaluating.evaluateRequest({ pathTemplate, requestParameters }),
+    {
+      headers: requestParameters.headers,
+      path: '/a/pathParamValue1/b/pathParamValue2/c',
+    },
+  );
+});
 
 evaluateValue('evaluates a regular string', () => {
   assert.equal(evaluating.evaluateValue('abc'), 'abc');
@@ -101,4 +124,5 @@ evaluateValue('evaluates an object', () => {
   );
 });
 
+evaluateRequest.run();
 evaluateValue.run();

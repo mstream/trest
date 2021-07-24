@@ -1,16 +1,16 @@
+import axios from 'axios';
 import cassandra from 'cassandra-driver';
 import dockerCompose from 'docker-compose';
-import path from 'path';
 import * as R from 'ramda';
-import { fileURLToPath } from 'url';
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 
-import * as executing from '../src/executing.mjs';
-import * as snapshots from './snapshots/index.mjs';
+import * as snapshots from '../../test/snapshots/index.mjs';
+import * as executing from './index.mjs';
 
 const cassandraKeyspace = 'pcs';
 const cassandraLocalDataCenter = 'datacenter1';
+const wiremockBaseUrl = 'http://localhost:8080';
 
 function createTable(keyspace, table, columns, primaryKey) {
   const primaryKeyDefinition = primaryKey.join(',');
@@ -33,6 +33,16 @@ const cqlQueries = {
   selectCurrentTime: () => 'SELECT now() FROM system.local',
 };
 
+const wiremockQueries = {
+  findRequestsByCriteria: async (criteria) =>
+    axios({
+      data: criteria,
+      method: 'post',
+      responseType: 'json',
+      url: `${wiremockBaseUrl}/__admin/requests/find`,
+    }).then((response) => response.data),
+};
+
 const clients = {};
 
 const variables = {};
@@ -40,10 +50,7 @@ const variables = {};
 const dockerComposeDownOpts = [['--timeout', 30]];
 
 const dockerComposeOpts = {
-  cwd: path.join(
-    path.dirname(fileURLToPath(import.meta.url)),
-    'docker-compose',
-  ),
+  cwd: 'test/docker-compose',
   log: true,
 };
 
@@ -85,15 +92,27 @@ async function startContainers() {
     let ready = false;
 
     while (!ready) {
-      console.info('Waiting for Cassandra service to be ready...');
+      console.info(
+        'Waiting for Cassandra and Wiremock services to be ready...',
+      );
       // eslint-disable-next-line no-await-in-loop
       const { services } = (await dockerCompose.ps(dockerComposeOpts))
         .data;
+
       const cassandraService = services.find(
         (service) => service.name === 'cassandra',
       );
 
-      if (cassandraService.state === 'Up (healthy)') {
+      const wiremockService = services.find(
+        (service) => service.name === 'wiremock',
+      );
+
+      const upStatus = 'Up (healthy)';
+
+      if (
+        cassandraService.state === upStatus &&
+        wiremockService.state === upStatus
+      ) {
         ready = true;
         const cqlNativePort = cassandraService.ports.find(
           (port) =>
@@ -138,8 +157,6 @@ execute.before(startContainers);
 execute.after(stopContainers);
 
 execute('executes correctly', async () => {
-  const { api, mergedScenarios, refIndex } = snapshots;
-
   await clients.cassandra.execute(
     cqlQueries.createKeyspace(cassandraKeyspace),
   );
@@ -156,10 +173,10 @@ execute('executes correctly', async () => {
     ),
   );
 
-  const givenExecutionResult = await executing.execute({
-    api,
-    mergedScenarios,
-    refIndex,
+  const executionResult = await executing.execute({
+    api: snapshots.api,
+    mergedScenarios: snapshots.mergedScenarios,
+    refIndex: snapshots.refIndex,
     variables,
   });
 
@@ -167,9 +184,17 @@ execute('executes correctly', async () => {
     cqlQueries.selectAll(cassandraKeyspace, 'ratings'),
   );
 
-  assert.equal(givenExecutionResult, snapshots.givenExecutionResult);
+  assert.equal(
+    executionResult,
+    snapshots.executionResult,
+    'execution result',
+  );
 
-  assert.equal(getAllRatingsResult.rows.length, 1);
+  assert.equal(
+    getAllRatingsResult.rows.length,
+    1,
+    'cassandra rows number',
+  );
 
   assert.ok(
     getAllRatingsResult.rows[0].countrycode.length > 0,
@@ -191,6 +216,17 @@ execute('executes correctly', async () => {
       ],
       snapshots,
     ),
+  );
+
+  const { requests } = await wiremockQueries.findRequestsByCriteria({
+    method: 'ANY',
+    urlPattern: '.*',
+  });
+
+  assert.equal(
+    requests.length,
+    Object.keys(snapshots.refIndex).length,
+    'sends one HTTP request per scenario',
   );
 });
 

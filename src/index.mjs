@@ -1,10 +1,10 @@
 import SwaggerParser from '@apidevtools/swagger-parser';
 
-import { execute } from './executing.mjs';
-import { mergeScenarios } from './merging.mjs';
+import { execute } from './executing/index.mjs';
+import { mergeScenarios } from './merging/index.mjs';
 import { parseApi } from './parsing/index.mjs';
 
-const apiPath = 'spec/fixtures/api.yml';
+const apiPath = '../test/snapshots/api.yml';
 
 async function run() {
   const { api, refIndex, scenarios } = await parseApi(

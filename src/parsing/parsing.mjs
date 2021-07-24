@@ -12,13 +12,15 @@ const methodNames = [
   'trace',
 ];
 
-function hashScenarioRef({
+export function hashScenarioRef({
   path,
   method,
   responseCode,
   scenarioIndex,
 }) {
-  return md5(`${path}|${method}|${responseCode}|${scenarioIndex}`);
+  return md5(
+    `${path}|${method}|${responseCode}|${scenarioIndex}`,
+  ).toString();
 }
 
 export function reduceScenariosSpec(

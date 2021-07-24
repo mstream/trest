@@ -37,12 +37,29 @@ function mergeThenCassandraModule(scenarios) {
   );
 }
 
+function mergeResponseModule(scenarios) {
+  return Object.entries(scenarios).reduce(
+    (acc, [scenarioRefHash, scenario]) => ({
+      ...acc,
+      statusCode: [
+        ...acc.statusCode,
+        {
+          scenarioRefHash,
+          spec: scenario?.then?.response?.statusCode || '2XX',
+        },
+      ],
+    }),
+    { statusCode: [] },
+  );
+}
+
 const moduleMergers = {
   given: {
     cassandra: mergeGivenCassandraModule,
   },
   then: {
     cassandra: mergeThenCassandraModule,
+    response: mergeResponseModule,
   },
 };
 

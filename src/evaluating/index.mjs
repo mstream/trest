@@ -69,3 +69,14 @@ export function evaluateValue(value, context) {
 
   return value;
 }
+
+export function evaluateRequest({ pathTemplate, requestParameters }) {
+  return {
+    headers: requestParameters.headers,
+    path: Object.entries(requestParameters.path).reduce(
+      (acc, [pathParameterName, pathParameterValue]) =>
+        acc.replace(`{${pathParameterName}}`, pathParameterValue),
+      pathTemplate,
+    ),
+  };
+}

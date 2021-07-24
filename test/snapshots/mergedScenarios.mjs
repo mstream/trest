@@ -1,9 +1,10 @@
 export default {
-  '08fc22bf09203709115ae82002615b71': {
-    given: {
-      cassandra: {
-        present: [
-          {
+  given: {
+    cassandra: {
+      present: [
+        {
+          scenarioRefHash: '08fc22bf09203709115ae82002615b71',
+          spec: {
             contactPoint: '{{ cassandraContactPoint | EXT }}',
             data: {
               countryCode: '{{ .path.countryCode | REQ }}',
@@ -13,25 +14,37 @@ export default {
             localDataCenter: '{{ cassandraLocalDataCenter | EXT }}',
             table: 'ratings',
           },
-        ],
-      },
+        },
+      ],
     },
-    name: 'Removing an existing territory',
-    then: {
-      cassandra: {
-        absent: [
-          {
+  },
+  then: {
+    cassandra: {
+      absent: [
+        {
+          scenarioRefHash: '08fc22bf09203709115ae82002615b71',
+          spec: {
             contactPoint: '{{ cassandraContactPoint | EXT }}',
             data: ['countryCode', 'values'],
             keyspace: '{{ cassandraKeyspace | EXT }}',
             localDataCenter: '{{ cassandraLocalDataCenter | EXT }}',
             table: 'ratings',
           },
-        ],
-      },
+        },
+      ],
+      present: [],
     },
-  },
-  'd01468c87c6f33af2ead1533758a3640': {
-    name: 'Removing a non-existent territory',
+    response: {
+      statusCode: [
+        {
+          scenarioRefHash: '08fc22bf09203709115ae82002615b71',
+          spec: '204',
+        },
+        {
+          scenarioRefHash: 'd01468c87c6f33af2ead1533758a3640',
+          spec: '204',
+        },
+      ],
+    },
   },
 };

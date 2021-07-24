@@ -250,6 +250,9 @@ paths:
 
           x-trest-scenarios:
             - name: 'Removing a non-existent territory'
+              then:
+                response:
+                  statusCode: '204'
             - name: 'Removing an existing territory'
               given: 
                 cassandra:
@@ -262,6 +265,8 @@ paths:
                         countryCode: '{{ .path.countryCode | REQ }}' 
                         values: '["A","B","C"]'
               then:
+                response:
+                  statusCode: '204'
                 cassandra:
                   absent:
                     - contactPoint: '{{ cassandraContactPoint | EXT }}' 

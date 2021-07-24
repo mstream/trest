@@ -3,15 +3,20 @@
   "version": "1.0.0",
   "scripts": {
     "commit": "cz",
-    "lint": "eslint --ext .mjs --fix src spec",
+    "lint": "eslint --ext .mjs --fix src test",
     "exec": "npm run test && node src/index.mjs",
-    "test": "npm run lint && uvu src && uvu spec"
+    "test": "npm run lint && npm run test:evaluating && npm run test:generating && npm run test:parsing && npm run test:merging && npm run test:executing",
+    "test:evaluating": "uvu src/evaluating",
+    "test:generating": "uvu src/generating",
+    "test:parsing": "uvu src/parsing",
+    "test:merging": "uvu src/merging",
+    "test:executing": "uvu src/executing"
   },
   "dependencies": {
     "@apidevtools/swagger-parser": "^10",
+    "axios": "~0.21",
     "cassandra-driver": "^4",
     "crypto-js": "^4",
-    "json-schema-faker": "0.5.0-rcv.34",
     "ramda": "~0.27"
   },
   "devDependencies": {
@@ -25,6 +30,7 @@
     "eslint-plugin-array-func": "^3",
     "eslint-plugin-eslint-comments": "^3",
     "eslint-plugin-html": "^6",
+    "eslint-plugin-import": "^2",
     "eslint-plugin-jasmine": "^4",
     "eslint-plugin-json": "^3",
     "eslint-plugin-markdown": "^2",
@@ -42,6 +48,7 @@
     "eslint-plugin-sonarjs": "0.8.0-125",
     "eslint-plugin-switch-case": "^1",
     "eslint-plugin-unicorn": "^34",
+    "fast-check": "^2",
     "npm": "^7",
     "prettier": "^2",
     "uvu": "~0.5"
